@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LatAm BD Pipeline Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f8f6;color:#111;font-size:13px;min-height:100vh}
+.header{background:#fff;border-bottom:0.5px solid #e5e5e5;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.header-left p{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#999;margin-bottom:2px}
+.header-left h1{font-size:18px;font-weight:500;color:#111}
+.header-right{display:flex;gap:8px;align-items:center}
+.meta{font-size:11px;color:#999;margin-right:4px}
+button{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:6px 12px;border:0.5px solid #ccc;background:#fff;color:#111;border-radius:8px;cursor:pointer;font-family:inherit}
+button:hover{background:#f5f5f5}
+button:disabled{opacity:.4;cursor:default}
+.sync-btn{background:#111;color:#fff;border-color:#111}
+.sync-btn:hover{background:#333}
+.sync-btn:disabled{background:#999;border-color:#999}
+.main{padding:20px 24px}
+.sbar{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;padding:8px 10px;background:#fff;border-radius:8px;border:0.5px solid #e5e5e5}
+.sp{display:inline-flex;align-items:center;gap:4px;border-radius:99px;font-size:11px;font-weight:500;padding:2px 8px;cursor:pointer;border:0.5px solid transparent;background:transparent;font-family:inherit}
+.pc{min-width:16px;height:16px;border-radius:99px;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;color:#fff}
+.filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sw{position:relative;flex:1 1 180px}
+.sw input{width:100%;padding-left:30px;font-size:12px}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#aaa;pointer-events:none;font-size:13px}
+input,select{font-size:12px;padding:7px 10px;border:0.5px solid #ddd;border-radius:8px;background:#fff;color:#111;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:#999}
+.tw{overflow-x:auto;border-radius:10px;border:0.5px solid #e5e5e5;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-width:1000px}
+thead tr{background:#f9f9f9;border-bottom:0.5px solid #e5e5e5}
+th{padding:8px 10px;text-align:left;font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#666;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:#111}
+td{padding:8px 10px;border-bottom:0.5px solid #f0f0f0;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.cp{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm{color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch{color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.cn{color:#555;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bdg{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.pb{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;white-space:nowrap;font-weight:500}
+.lnk{color:#0070f3;text-decoration:none;font-size:10px;margin-right:4px}
+.lnk:hover{text-decoration:underline}
+.tally{font-size:11px;color:#aaa;text-align:right;margin-top:6px}
+.empty{text-align:center;padding:4rem 0;color:#aaa;font-size:14px}
+.error-box{background:#fff0f0;color:#a32d2d;border:0.5px solid #f09595;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:12px}
+.error-box a{color:#a32d2d;cursor:pointer;text-decoration:underline}
+.skel{height:44px;border-radius:6px;margin-bottom:6px;background:#f0f0f0;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+.loading{padding:1rem 0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <p>LatAm · BD pipeline</p>
+    <h1>Partner tracker</h1>
+  </div>
+  <div class="header-right">
+    <span class="meta" id="meta">Click sync to load</span>
+    <button onclick="exportCSV()" id="exportBtn" disabled>&#8595; Export CSV</button>
+    <button class="sync-btn" onclick="fetchDeals()" id="syncBtn">&#8635; Sync HubSpot</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sbar" id="sbar"></div>
+  <div class="filters">
+    <div class="sw">
+      <span class="si">&#9906;</span>
+      <input type="text" id="search" placeholder="Search company, owner, use case&hellip;" oninput="render()">
+    </div>
+    <select id="pf" onchange="render()">
+      <option value="All">Both pipelines</option>
+      <option value="World ID Integrations">WID Integrations</option>
+      <option value="World ID Rewards">WID Rewards</option>
+    </select>
+    <select id="cf" onchange="render()"><option value="All">All countries</option></select>
+    <select id="of" onchange="render()"><option value="All">All owners</option></select>
+    <select id="sf" onchange="render()"><option value="All">All stages</option></select>
+  </div>
+  <div id="errorBox" style="display:none" class="error-box"></div>
+  <div id="loading" style="display:none" class="loading"></div>
+  <div id="tw"></div>
+  <p class="tally" id="tally"></p>
+</div>
+
+<script>
+const CO={"37943655705":"Caixa Economica Federal","34704952133":"Serasa Experian","43460547912":"Wildlife Studios","41926280476":"Pizzeria Popular","34443680137":"Bepass","51297382658":"Didi","51367817475":"Wati","50571792907":"Idwall","35525473297":"Q2 Ingressos","40788964879":"Reserva","34346355307":"Mercado Bitcoin","34524408169":"VTEX","35376103337":"Certisign","34733463555":"Payface","51031989019":"Belvo","35606139673":"Web Summit","34445639072":"Inter","38285628673":"Grupo Vega","48561435187":"FRQTAL Argentina","15604001312":"Laptop Aid","38487383212":"Menos Cero SA","48487246465":"QUBA","9429505845":"Blockchain Summit Latam","17450061403":"ALAP","9503051266":"Crypstation","9512188989":"Del Patio Brokers","9256171166":"Intuitivo Tech","9381627751":"Buenos Aires City Gov.","9393620824":"IRSA","9116693507":"Univ. de los Andes","9401471604":"River Plate"};
+function pip(id){return id==="766601375"?"World ID Rewards":"World ID Integrations";}
+function stg(id){const m={"1286198832":"3. Scoping","1286198833":"4. Proposal","1286198834":"7. Integrating","1286198835":"8. Live","216637275":"1. Engaged","216637276":"1. Engaged","216637277":"2. Qualified","216637278":"2. Qualified","216637279":"2. Qualified","216637280":"2. Qualified","216637281":"2. Qualified","216637282":"3. Scoping","216637283":"3. Scoping","216637284":"4. Proposal","216637285":"4. Proposal","216591231":"6. Contracting","216591232":"8. Live","216591233":"10. Disqualified","1134632075":"1. Engaged","1134632076":"1. Engaged","1117209921":"3. Scoping","1121199287":"3. Scoping","1121199288":"6. Contracting","1117209922":"7. Integrating","1128872231":"7. Integrating","1121199289":"8. Live","1117209926":"10. Disqualified","1121199360":"10. Disqualified","1136897719":"0. Targeted","1136897720":"0. Targeted","1136897721":"1. Engaged","1136897792":"2. Qualified","appointmentscheduled":"1. Engaged","closedlost":"10. Disqualified","presentationscheduled":"2. Qualified","28660275":"3. Scoping","1136895810":"0. Targeted","":" -"};return m[id]||"0. Targeted";}
+function cname(ci,dn){if(ci&&CO[ci])return CO[ci];if(dn){const p=dn.split(" - ");if(p.length>1)return p[0].trim();}return dn||"-";}
+const SO=["0. Targeted","1. Engaged","2. Qualified","3. Scoping","4. Proposal","5. Compliance","6. Contracting","7. Integrating","8. Live","9. Disengaged","10. Disqualified"," -"];
+const SS={"0. Targeted":{bg:"#F1EFE8",t:"#444441",d:"#888780"},"1. Engaged":{bg:"#E6F1FB",t:"#0C447C",d:"#378ADD"},"2. Qualified":{bg:"#EAF3DE",t:"#27500A",d:"#639922"},"3. Scoping":{bg:"#FAEEDA",t:"#633806",d:"#EF9F27"},"4. Proposal":{bg:"#EEEDFE",t:"#3C3489",d:"#7F77DD"},"5. Compliance":{bg:"#FDE8F5",t:"#6B1150",d:"#C248A0"},"6. Contracting":{bg:"#FBEAF0",t:"#72243E",d:"#D4537E"},"7. Integrating":{bg:"#E1F5EE",t:"#085041",d:"#1D9E75"},"8. Live":{bg:"#EAF3DE",t:"#173404",d:"#639922"},"9. Disengaged":{bg:"#F1EFE8",t:"#444441",d:"#888780"},"10. Disqualified":{bg:"#FCEBEB",t:"#791F1F",d:"#E24B4A"}," -":{bg:"#eee",t:"#666",d:"#bbb"}};
+const PS={"World ID Integrations":{bg:"#E6F1FB",t:"#0C447C"},"World ID Rewards":{bg:"#EAF3DE",t:"#085041"}};
+const OW={"82408554":"Sebastian F.","92171634":"Bruno C.","203235164":"Martin M.","85111884":"Matias L.","89147863":"Roberto F.","80246179":"Juliana F.","86572223":"Nicolas M.","83119534":"Florencia C."};
+const TEAM_OWNER_IDS=["82408554","92171634","203235164","85111884","89147863","80246179","86572223","83119534"];
+const LATAM_COUNTRIES=["Mexico","Brazil","Argentina","Colombia","Ecuador","Panama","Uruguay","Peru","Chile","Bolivia","Venezuela","Costa Rica","Guatemala","Honduras","El Salvador","Nicaragua","Dominican Republic","Cuba","Paraguay"];
+
+let allDeals=[], sortKey="lm", sortDir="desc", activeStage="All";
+
+async function fetchDeals(){
+  const btn=document.getElementById("syncBtn");
+  btn.disabled=true; btn.textContent="Syncing...";
+  document.getElementById("errorBox").style.display="none";
+  document.getElementById("tw").innerHTML="";
+  document.getElementById("tally").textContent="";
+  showLoading(true);
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:`You are a HubSpot data extraction assistant. Use the HubSpot MCP tools to fetch ALL deals from HubSpot. Include a deal if:
+1. The owner ID is one of: ${TEAM_OWNER_IDS.join(",")}
+2. OR the country field is in LatAm: ${LATAM_COUNTRIES.join(",")}
+3. OR the region field is LATAM
+
+Return ONLY a valid JSON array, no markdown, no explanation. Each object must have:
+- id: string
+- dealname: string
+- pipeline: string (HubSpot pipeline ID)
+- dealstage: string (HubSpot stage ID)
+- owner: string (hubspot_owner_id)
+- country: string (country field value or empty string)
+- region: string (region field value or empty string)
+- use_case: string (use_case field or empty string)
+- lastActivity: string (notes_last_updated as YYYY-MM-DD or empty string)
+- description: string (description field or empty string)
+- lastmod: string (hs_lastmodifieddate as YYYY-MM-DD)
+- companyId: string (company_id__auto_synched_ or empty string)`,
+        messages:[{role:"user",content:"Fetch all qualifying LatAm deals from HubSpot using both owner ID and country/region filters. Return the full JSON array."}],
+        mcp_servers:[{type:"url",url:"https://mcp.hubspot.com/anthropic",name:"hubspot-mcp"}]
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const textBlock = data.content?.find(b=>b.type==="text");
+    if(!textBlock) throw new Error("No response received");
+    const cleaned = textBlock.text.replace(/```json|```/g,"").trim();
+    const raw = JSON.parse(cleaned);
+    if(!Array.isArray(raw)) throw new Error("Unexpected response format");
+    const seen=new Set();
+    allDeals = raw.filter(d=>{if(seen.has(d.id))return false;seen.add(d.id);return true;}).map(d=>({
+      ...d,
+      company: cname(d.companyId, d.dealname),
+      pipeline: pip(d.pipeline),
+      stage: stg(d.dealstage),
+      ownerLabel: OW[d.owner]||("Owner "+d.owner)
+    }));
+    const active = allDeals.filter(d=>!["10. Disqualified","9. Disengaged"].includes(d.stage)).length;
+    document.getElementById("meta").textContent = `${allDeals.length} deals · ${active} active · ${new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}`;
+    document.getElementById("exportBtn").disabled = false;
+    buildFilters(); buildStageBar(); render();
+  } catch(e) {
+    const box = document.getElementById("errorBox");
+    box.style.display = "block";
+    box.innerHTML = `<strong>Could not load from HubSpot</strong> - ${e.message}. <a onclick="fetchDeals()">Try again</a>.`;
+    document.getElementById("meta").textContent = "Sync failed";
+  } finally {
+    showLoading(false);
+    btn.disabled=false; btn.textContent="Sync HubSpot";
+  }
+}
+
+function showLoading(on){
+  const el=document.getElementById("loading");
+  el.style.display=on?"block":"none";
+  if(on) el.innerHTML=[...Array(8)].map((_,i)=>`<div class="skel" style="animation-delay:${i*.1}s"></div>`).join("");
+}
+
+function buildFilters(){
+  const ow=["All",...new Set(allDeals.map(d=>d.ownerLabel))].sort();
+  const ct=["All",...new Set(allDeals.map(d=>d.country).filter(Boolean))].sort();
+  const st=["All",...SO.filter(s=>allDeals.some(d=>d.stage===s))];
+  document.getElementById("of").innerHTML=ow.map(o=>`<option value="${o}">${o==="All"?"All owners":o}</option>`).join("");
+  document.getElementById("cf").innerHTML=ct.map(c=>`<option value="${c}">${c==="All"?"All countries":c}</option>`).join("");
+  document.getElementById("sf").innerHTML=st.map(s=>`<option value="${s}">${s==="All"?"All stages":s}</option>`).join("");
+}
+
+function buildStageBar(){
+  const cnt={};allDeals.forEach(d=>{cnt[d.stage]=(cnt[d.stage]||0)+1;});
+  document.getElementById("sbar").innerHTML=SO.filter(s=>cnt[s]).map(s=>{
+    const sc=SS[s]||{bg:"#eee",t:"#444",d:"#999"};
+    return `<button class="sp" data-s="${s}" onclick="ts('${s}')" style="color:${sc.t}">${s}<span class="pc" style="background:${sc.d}">${cnt[s]}</span></button>`;
+  }).join("");
+  hl();
+}
+
+function ts(s){activeStage=activeStage===s?"All":s;document.getElementById("sf").value=activeStage;hl();render();}
+function hl(){document.querySelectorAll(".sp").forEach(b=>{const s=b.dataset.s,sc=SS[s]||{};b.style.background=activeStage===s?sc.bg:"transparent";b.style.borderColor=activeStage===s?sc.d:"transparent";});}
+
+function gf(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const p=document.getElementById("pf").value;
+  const c=document.getElementById("cf").value;
+  const o=document.getElementById("of").value;
+  const s=document.getElementById("sf").value;
+  return allDeals
+    .filter(d=>p==="All"||d.pipeline===p)
+    .filter(d=>c==="All"||d.country===c)
+    .filter(d=>o==="All"||d.ownerLabel===o)
+    .filter(d=>(s==="All"||d.stage===s)&&(activeStage==="All"||d.stage===activeStage))
+    .filter(d=>!q||[d.company,d.dealname,d.use_case,d.ownerLabel,d.description,d.country].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=>{
+      let av=sortKey==="stage"?SO.indexOf(a.stage):(a[sortKey]||"");
+      let bv=sortKey==="stage"?SO.indexOf(b.stage):(b[sortKey]||"");
+      return av<bv?(sortDir==="asc"?-1:1):av>bv?(sortDir==="asc"?1:-1):0;
+    });
+}
+
+function sb(k){if(sortKey===k)sortDir=sortDir==="asc"?"desc":"asc";else{sortKey=k;sortDir="asc";}render();}
+function ar(c){if(sortKey!==c)return` <span style="opacity:.25;font-size:9px">&#8645;</span>`;return sortDir==="asc"?` <span style="font-size:9px;color:#0070f3">&#8593;</span>`:`<span style="font-size:9px;color:#0070f3">&#8595;</span>`;}
+
+function render(){
+  const data=gf();
+  const wrap=document.getElementById("tw");
+  if(!data.length){
+    wrap.innerHTML=`<div class="empty">${allDeals.length===0?'Click "Sync HubSpot" to load your deals.':"No deals match your filters."}</div>`;
+    document.getElementById("tally").textContent="";
+    return;
+  }
+  const cols=[
+    {k:"company",l:"Company",w:"14%"},
+    {k:"pipeline",l:"Pipeline",w:"10%"},
+    {k:"use_case",l:"Use case",w:"12%"},
+    {k:"ownerLabel",l:"Owner",w:"9%"},
+    {k:"stage",l:"Stage",w:"13%"},
+    {k:"country",l:"Country",w:"8%"},
+    {k:"region",l:"Region",w:"6%"},
+    {k:"lastActivity",l:"Last activity",w:"9%"},
+    {k:"description",l:"Notes",w:"19%"},
+  ];
+  const thead=`<thead><tr>${cols.map(c=>`<th onclick="sb('${c.k}')" style="width:${c.w}">${c.l}${ar(c.k)}</th>`).join("")}</tr></thead>`;
+  const tbody=data.map(d=>{
+    const sc=SS[d.stage]||{bg:"#eee",t:"#444",d:"#999"};
+    const pc=PS[d.pipeline]||{bg:"#eee",t:"#444"};
+    const badge=`<span class="bdg" style="background:${sc.bg};color:${sc.t}"><span class="dot" style="background:${sc.d}"></span>${d.stage}</span>`;
+    const pb=`<span class="pb" style="background:${pc.bg};color:${pc.t}">${d.pipeline==="World ID Integrations"?"Integrations":"Rewards"}</span>`;
+    const url=`https://app.hubspot.com/contacts/22310328/record/0-3/${d.id}`;
+    return `<tr>
+      <td class="cp"><a class="lnk" href="${url}" target="_blank" title="Open in HubSpot">&#8599;</a>${d.company}</td>
+      <td>${pb}</td>
+      <td class="cm" title="${d.use_case||""}">${d.use_case||"-"}</td>
+      <td class="cm">${d.ownerLabel}</td>
+      <td>${badge}</td>
+      <td class="cm">${d.country||"-"}</td>
+      <td class="ch">${d.region||"-"}</td>
+      <td class="ch">${d.lastActivity||"-"}</td>
+      <td class="cn" title="${(d.description||"").replace(/"/g,"&quot;")}">${d.description||"-"}</td>
+    </tr>`;
+  }).join("");
+  wrap.innerHTML=`<div class="tw"><table><colgroup>${cols.map(c=>`<col style="width:${c.w}">`).join("")}</colgroup>${thead}<tbody>${tbody}</tbody></table></div>`;
+  document.getElementById("tally").textContent=`Showing ${data.length} of ${allDeals.length} deals`;
+}
+
+function exportCSV(){
+  const data=gf();
+  const h=["Company","Deal name","Pipeline","Use case","Owner","Stage","Country","Region","Last activity","Notes","HubSpot URL"];
+  const rows=data.map(d=>[
+    `"${d.company}"`,`"${d.dealname}"`,d.pipeline,`"${d.use_case||""}"`,
+    d.ownerLabel,d.stage,d.country||"",d.region||"",d.lastActivity||"",
+    `"${(d.description||"").replace(/"/g,'""')}"`,
+    `https://app.hubspot.com/contacts/22310328/record/0-3/${d.id}`
+  ]);
+  const csv=[h,...rows].map(r=>r.join(",")).join("\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  const a=document.createElement("a");a.href=url;a.download=`latam_bd_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

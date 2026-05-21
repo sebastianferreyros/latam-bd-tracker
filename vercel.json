@@ -1,12 +1,12 @@
 {
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
-      "source": "/(.*).html",
+      "source": "/index.html",
       "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/html; charset=utf-8"
-        }
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
       ]
     }
   ]

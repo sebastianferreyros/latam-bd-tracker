@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LatAm BD Pipeline · World ID</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8e9eb;--muted:#6b7280;--accent:#4ade80;--s0:#2a2d35;--s0t:#9ca3af;--s0d:#4b5563;--s1:#0f2a1e;--s1t:#4ade80;--s1d:#22c55e;--s2:#0e2433;--s2t:#60a5fa;--s2d:#3b82f6;--s3:#2a1f0a;--s3t:#fbbf24;--s3d:#f59e0b;--s4:#1e1535;--s4t:#a78bfa;--s4d:#8b5cf6;--s5:#2a0f1e;--s5t:#f472b6;--s5d:#ec4899;--s6:#1f0f2a;--s6t:#c084fc;--s6d:#a855f7;--s7:#0a2218;--s7t:#34d399;--s7d:#10b981;--s8:#082215;--s8t:#4ade80;--s8d:#16a34a;--s9:#1a1a1a;--s9t:#9ca3af;--s9d:#6b7280;--s10:#2a0808;--s10t:#f87171;--s10d:#ef4444;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
+.header{padding:18px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:var(--surface)}
+.logo{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:15px;margin-right:12px;flex-shrink:0}
+.title-group p{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
+.title-group h1{font-size:17px;font-weight:500}
+.header-left{display:flex;align-items:center}
+.header-right{display:flex;gap:8px;align-items:center}
+.meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-right:4px}
+.btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 13px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text);transition:all .15s}
+.btn:hover{background:var(--surface);border-color:rgba(255,255,255,.2)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn-p{background:var(--accent);color:#000;border-color:var(--accent);font-weight:500}
+.btn-p:hover{background:#86efac;border-color:#86efac}
+.btn-p:disabled{background:var(--surface2);color:var(--muted);border-color:var(--border)}
+.stage-bar{display:flex;flex-wrap:wrap;gap:4px;padding:10px 28px;border-bottom:1px solid var(--border);background:var(--surface)}
+.sc{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;color:var(--muted);background:transparent;transition:all .15s;font-family:'DM Sans',sans-serif}
+.sc:hover{color:var(--text);border-color:var(--border2)}
+.sc.on{border-color:currentColor}
+.cc{min-width:16px;height:16px;border-radius:99px;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;color:#000}
+.filters{display:flex;gap:8px;padding:12px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.sw{position:relative;flex:1 1 200px}
+.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+input,select{font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .15s}
+input{padding-left:30px;width:100%}
+input:focus,select:focus{border-color:var(--border2)}
+select{cursor:pointer}
+select option{background:var(--surface2)}
+.tw{overflow-x:auto;padding:0 28px 28px}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-width:1050px}
+thead tr{border-bottom:1px solid var(--border2)}
+th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap;cursor:pointer;user-select:none;font-family:'DM Mono',monospace}
+th:hover{color:var(--text)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+tr:last-child td{border-bottom:none}
+.cp{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm{color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cd{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'DM Mono',monospace;font-size:11px}
+.cn{color:#9ca3af;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:500;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.bd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.pb{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:5px;white-space:nowrap;font-family:'DM Mono',monospace}
+.lnk{color:#3b82f6;text-decoration:none;font-size:11px;margin-right:5px;opacity:.7}
+.lnk:hover{opacity:1}
+.empty{text-align:center;padding:5rem 0;color:var(--muted);font-size:14px}
+.notice{margin:16px 28px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:12px 16px;font-size:13px;color:#fbbf24}
+.err{margin:16px 28px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:12px 16px;font-size:13px;color:#f87171}
+.tally{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right;padding:6px 28px 0}
+.skel-row{height:41px;border-radius:6px;margin-bottom:4px;background:var(--surface2);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
+.spin{display:inline-block;animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="logo">W</div>
+    <div class="title-group">
+      <p>LatAm · BD pipeline</p>
+      <h1>Partner tracker</h1>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="meta" id="meta">Loading…</span>
+    <button class="btn" onclick="exportCSV()" id="exportBtn" disabled>↓ CSV</button>
+    <button class="btn btn-p" onclick="loadData()" id="syncBtn">
+      <span class="spin" id="sp" style="display:none">↻</span>
+      <span id="sl">↻ Refresh</span>
+    </button>
+  </div>
+</div>
+<div class="stage-bar" id="sbar"></div>
+<div class="filters">
+  <div class="sw"><span class="si">⌕</span><input type="text" id="search" placeholder="Search company, owner, use case…" oninput="render()"></div>
+  <select id="pf" onchange="render()"><option value="All">Both pipelines</option><option value="World ID Integrations">WID Integrations</option><option value="World ID Rewards">WID Rewards</option></select>
+  <select id="cf" onchange="render()"><option value="All">All countries</option></select>
+  <select id="of" onchange="render()"><option value="All">All owners</option></select>
+  <select id="sf" onchange="render()"><option value="All">All stages</option></select>
+</div>
+<div id="notice" style="display:none" class="notice"></div>
+<div id="err" style="display:none" class="err"></div>
+<div id="skel" style="display:none;padding:12px 28px"></div>
+<div id="tw" class="tw"></div>
+<p class="tally" id="tally"></p>
+
+<script>
+const SHEET_ID='1tzQSJiufmi9jLfBa7SBMNZepgpBJIiX-HyXOUjSWKrw';
+const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+const SO=["0. Targeted","1. Engaged","2. Qualified","3. Scoping","4. Proposal","5. Compliance","6. Contracting","7. Integrating","8. Live","9. Disengaged","10. Disqualified"];
+const SC={"0. Targeted":{bg:"var(--s0)",t:"var(--s0t)",d:"var(--s0d)"},"1. Engaged":{bg:"var(--s1)",t:"var(--s1t)",d:"var(--s1d)"},"2. Qualified":{bg:"var(--s2)",t:"var(--s2t)",d:"var(--s2d)"},"3. Scoping":{bg:"var(--s3)",t:"var(--s3t)",d:"var(--s3d)"},"4. Proposal":{bg:"var(--s4)",t:"var(--s4t)",d:"var(--s4d)"},"5. Compliance":{bg:"var(--s5)",t:"var(--s5t)",d:"var(--s5d)"},"6. Contracting":{bg:"var(--s6)",t:"var(--s6t)",d:"var(--s6d)"},"7. Integrating":{bg:"var(--s7)",t:"var(--s7t)",d:"var(--s7d)"},"8. Live":{bg:"var(--s8)",t:"var(--s8t)",d:"var(--s8d)"},"9. Disengaged":{bg:"var(--s9)",t:"var(--s9t)",d:"var(--s9d)"},"10. Disqualified":{bg:"var(--s10)",t:"var(--s10t)",d:"var(--s10d)"}};
+const PC={"World ID Integrations":{bg:"rgba(59,130,246,.15)",t:"#60a5fa"},"World ID Rewards":{bg:"rgba(74,222,128,.12)",t:"#4ade80"}};
+let deals=[],sk="Last Modified",sd="desc",as="All";
+
+function parseCSV(txt){
+  const lines=txt.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const vals=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"')inQ=!inQ;else if(c===','&&!inQ){vals.push(cur);cur='';}else cur+=c;}
+    vals.push(cur);
+    const obj={};headers.forEach((h,i)=>obj[h]=(vals[i]||'').trim());
+    return obj;
+  }).filter(d=>d.Company);
+}
+
+async function loadData(){
+  const btn=document.getElementById('syncBtn');
+  btn.disabled=true;
+  document.getElementById('sl').style.display='none';
+  document.getElementById('sp').style.display='inline-block';
+  document.getElementById('err').style.display='none';
+  showSkel(true);
+  try{
+    const res=await fetch(CSV_URL);
+    if(!res.ok){
+      if(res.status===401||res.status===403)throw new Error('Sign in to your @toolsforhumanity.com Google account first, then refresh.');
+      throw new Error(`Sheet load failed (${res.status})`);
+    }
+    const txt=await res.text();
+    deals=parseCSV(txt);
+    const active=deals.filter(d=>!['10. Disqualified','9. Disengaged'].includes(d.Stage)).length;
+    document.getElementById('meta').textContent=`${deals.length} deals · ${active} active · ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
+    document.getElementById('exportBtn').disabled=false;
+    buildFilters();buildSbar();render();
+  }catch(e){
+    document.getElementById('err').style.display='block';
+    document.getElementById('err').textContent='⚠ '+e.message;
+    document.getElementById('meta').textContent='Load failed';
+  }finally{
+    showSkel(false);btn.disabled=false;
+    document.getElementById('sl').style.display='inline';
+    document.getElementById('sp').style.display='none';
+  }
+}
+
+function showSkel(on){
+  const s=document.getElementById('skel');s.style.display=on?'block':'none';
+  if(on)s.innerHTML=[...Array(8)].map((_,i)=>`<div class="skel-row" style="animation-delay:${i*.08}s"></div>`).join('');
+  document.getElementById('tw').innerHTML='';
+}
+
+function buildFilters(){
+  const ow=['All',...new Set(deals.map(d=>d.Owner).filter(Boolean))].sort();
+  const ct=['All',...new Set(deals.map(d=>d.Country).filter(Boolean))].sort();
+  const st=['All',...SO.filter(s=>deals.some(d=>d.Stage===s))];
+  document.getElementById('of').innerHTML=ow.map(o=>`<option value="${o}">${o==='All'?'All owners':o}</option>`).join('');
+  document.getElementById('cf').innerHTML=ct.map(c=>`<option value="${c}">${c==='All'?'All countries':c}</option>`).join('');
+  document.getElementById('sf').innerHTML=st.map(s=>`<option value="${s}">${s==='All'?'All stages':s}</option>`).join('');
+}
+
+function buildSbar(){
+  const cnt={};deals.forEach(d=>{cnt[d.Stage]=(cnt[d.Stage]||0)+1;});
+  document.getElementById('sbar').innerHTML=SO.filter(s=>cnt[s]).map(s=>{
+    const c=SC[s]||{bg:'#1a1a1a',t:'#9ca3af',d:'#4b5563'};
+    return`<button class="sc${as===s?' on':''}" data-s="${s}" onclick="ts('${s}')" style="color:${c.t};${as===s?`background:${c.bg};border-color:${c.t};`:''}">${s}<span class="cc" style="background:${c.d}">${cnt[s]}</span></button>`;
+  }).join('');
+}
+
+function ts(s){as=as===s?'All':s;document.getElementById('sf').value=as;buildSbar();render();}
+
+function gf(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const p=document.getElementById('pf').value,c=document.getElementById('cf').value,o=document.getElementById('of').value,s=document.getElementById('sf').value;
+  return deals.filter(d=>p==='All'||d.Pipeline===p).filter(d=>c==='All'||d.Country===c).filter(d=>o==='All'||d.Owner===o).filter(d=>(s==='All'||d.Stage===s)&&(as==='All'||d.Stage===as)).filter(d=>!q||[d.Company,d['Deal Name'],d['Use Case'],d.Owner,d.Notes,d.Country].join(' ').toLowerCase().includes(q)).sort((a,b)=>{let av=sk==='Stage'?SO.indexOf(a.Stage):(a[sk]||''),bv=sk==='Stage'?SO.indexOf(b.Stage):(b[sk]||'');return av<bv?(sd==='asc'?-1:1):av>bv?(sd==='asc'?1:-1):0;});
+}
+
+function sb(k){if(sk===k)sd=sd==='asc'?'desc':'asc';else{sk=k;sd='asc';}render();}
+function ar(c){if(sk!==c)return`<span style="opacity:.2;font-size:9px"> ⇅</span>`;return sd==='asc'?`<span style="font-size:9px;color:var(--accent)"> ↑</span>`:`<span style="font-size:9px;color:var(--accent)"> ↓</span>`;}
+
+function render(){
+  const data=gf(),wrap=document.getElementById('tw');
+  if(!data.length){wrap.innerHTML=`<div class="empty">${deals.length===0?'Click Refresh to load deals.':'No deals match your filters.'}</div>`;document.getElementById('tally').textContent='';return;}
+  const cols=[{k:'Company',l:'Company',w:'13%'},{k:'Pipeline',l:'Pipeline',w:'10%'},{k:'Use Case',l:'Use case',w:'11%'},{k:'Owner',l:'Owner',w:'9%'},{k:'Stage',l:'Stage',w:'12%'},{k:'Country',l:'Country',w:'7%'},{k:'Region',l:'Region',w:'6%'},{k:'Last Activity',l:'Last activity',w:'9%'},{k:'Notes',l:'Notes',w:'23%'}];
+  const thead=`<thead><tr>${cols.map(c=>`<th onclick="sb('${c.k}')" style="width:${c.w}">${c.l}${ar(c.k)}</th>`).join('')}</tr></thead>`;
+  const tbody=data.map(d=>{
+    const c=SC[d.Stage]||{bg:'#1a1a1a',t:'#9ca3af',d:'#4b5563'};
+    const pc=PC[d.Pipeline]||{bg:'rgba(100,100,100,.1)',t:'#9ca3af'};
+    const badge=`<span class="badge" style="background:${c.bg};color:${c.t}"><span class="bd" style="background:${c.d}"></span>${d.Stage||'—'}</span>`;
+    const pip=`<span class="pb" style="background:${pc.bg};color:${pc.t}">${d.Pipeline==='World ID Integrations'?'Integrations':'Rewards'}</span>`;
+    const lnk=d['HubSpot Link']?`<a class="lnk" href="${d['HubSpot Link']}" target="_blank" rel="noreferrer">↗</a>`:'';
+    return`<tr><td class="cp">${lnk}${d.Company||'—'}</td><td>${pip}</td><td class="cm" title="${d['Use Case']||''}">${d['Use Case']||'—'}</td><td class="cm">${d.Owner||'—'}</td><td>${badge}</td><td class="cm">${d.Country||'—'}</td><td class="cd">${d.Region||'—'}</td><td class="cd">${d['Last Activity']||'—'}</td><td class="cn" title="${(d.Notes||'').replace(/"/g,'&quot;')}">${d.Notes||'—'}</td></tr>`;
+  }).join('');
+  wrap.innerHTML=`<table><colgroup>${cols.map(c=>`<col style="width:${c.w}">`).join('')}</colgroup>${thead}<tbody>${tbody}</tbody></table>`;
+  document.getElementById('tally').textContent=`Showing ${data.length} of ${deals.length} deals`;
+}
+
+function exportCSV(){
+  const data=gf();
+  const h=['Company','Deal Name','Pipeline','Use Case','Owner','Stage','Country','Region','Last Activity','Notes','HubSpot Link'];
+  const rows=data.map(d=>h.map(k=>`"${(d[k]||'').replace(/"/g,'""')}"`));
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a=document.createElement('a');a.href=url;a.download=`latam_bd_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
+}
+
+loadData();
+</script>
+</body>
+</html>

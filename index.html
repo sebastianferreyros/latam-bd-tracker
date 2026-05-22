@@ -36,13 +36,13 @@ table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-
 thead tr{border-bottom:1px solid var(--border2)}
 th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap;cursor:pointer;user-select:none;font-family:'DM Mono',monospace}
 th:hover{color:var(--text)}
-td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:hover td{background:rgba(255,255,255,.02)}
 tr:last-child td{border-bottom:none}
 .cp{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cm{color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cd{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'DM Mono',monospace;font-size:11px}
-.cn{color:#9ca3af;font-size:11px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.5}
+.cn{color:#9ca3af;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:500;padding:3px 8px;border-radius:6px;white-space:nowrap}
 .bd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .pri{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;white-space:nowrap;font-family:'DM Mono',monospace}
@@ -56,6 +56,16 @@ tr:last-child td{border-bottom:none}
 .empty{text-align:center;padding:5rem 0;color:var(--muted);font-size:14px}
 .tally{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right;padding:6px 28px 0}
 .ns{color:var(--muted);font-size:11px;font-style:italic}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
+.modal h3{font-size:14px;font-weight:500;margin-bottom:12px;color:var(--text)}
+.modal p{font-size:13px;color:#9ca3af;line-height:1.7;white-space:pre-wrap}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.modal-close:hover{color:var(--text);background:var(--surface2)}
+.note-btn{cursor:pointer;color:#9ca3af;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;background:none;border:none;padding:0;text-align:left;width:100%;font-family:inherit}
+.note-btn:hover{color:var(--text)}
 </style>
 </head>
 <body>
@@ -279,7 +289,7 @@ function render(){
       <td>${engCell}</td>
       <td class="cm">${d.country||"-"}</td>
       <td class="cn" title="${(d.incentiveDesc||"").replace(/"/g,"&quot;")}">${incCell}</td>
-      <td class="cn" title="${(d.notes||"").replace(/"/g,"&quot;")}">${d.notes||"-"}</td>
+      <td class="cn">${d.notes ? `<button class="note-btn" title="Click to expand" onclick="openNote('${d.company.replace(/'/g,"\\'")}','${d.notes.replace(/'/g,"\\'").replace(/\n/g," ")}')">${d.notes}</button>` : '-'}</td>
     </tr>`;
   }).join("");
   wrap.innerHTML=`<table><colgroup>${cols.map(c=>`<col style="width:${c.w}">`).join("")}</colgroup>${thead}<tbody>${tbody}</tbody></table>`;
@@ -296,6 +306,24 @@ function exportCSV(){
 }
 
 buildFilters();buildSbar();render();
+
+function openNote(company, text) {
+  document.getElementById('modalTitle').textContent = company;
+  document.getElementById('modalBody').textContent = text;
+  document.getElementById('noteModal').classList.add('open');
+}
+function closeModal(e) {
+  if(e.target.id === 'noteModal') document.getElementById('noteModal').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.getElementById('noteModal').classList.remove('open'); });
 </script>
+
+<div class="modal-overlay" id="noteModal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('noteModal').classList.remove('open')">&#10005;</button>
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+  </div>
+</div>
 </body>
 </html>

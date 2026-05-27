@@ -23,14 +23,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sc:hover{color:var(--text);border-color:var(--border2)}
 .sc.on{border-color:currentColor}
 .cc{min-width:16px;height:16px;border-radius:99px;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;color:#000}
-.filters{display:flex;gap:8px;padding:12px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+/* Filter bar */
+.filters{display:flex;gap:8px;padding:12px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:flex-start}
 .sw{position:relative;flex:1 1 200px}
 .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
-input,select{font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .15s}
-input{padding-left:30px;width:100%}
-input:focus,select:focus{border-color:var(--border2)}
-select{cursor:pointer}
-select option{background:var(--surface2)}
+input[type=text]{font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 11px;padding-left:30px;width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .15s}
+input[type=text]:focus{border-color:var(--border2)}
+/* Multi-select dropdown */
+.ms-wrap{position:relative;flex:0 0 auto}
+.ms-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 11px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);white-space:nowrap;user-select:none;min-width:110px;justify-content:space-between}
+.ms-btn:hover{border-color:var(--border2)}
+.ms-btn.active{border-color:var(--accent);color:var(--accent)}
+.ms-arrow{font-size:9px;opacity:.5;margin-left:4px}
+.ms-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:180px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:6px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.ms-dropdown.open{display:block}
+.ms-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text)}
+.ms-item:hover{background:var(--surface2)}
+.ms-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.ms-divider{height:1px;background:var(--border);margin:4px 0}
+.ms-all{font-size:11px;color:var(--muted);padding:4px 8px;cursor:pointer}
+.ms-all:hover{color:var(--text)}
+/* Table */
 .tw{overflow-x:auto;padding:0 28px 28px}
 table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-width:1300px}
 thead tr{border-bottom:1px solid var(--border2)}
@@ -76,18 +89,19 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="hr">
     <span class="meta" id="meta"></span>
+    <button class="btn" id="clearBtn" onclick="clearFilters()" style="display:none">&#10005; Clear filters</button>
     <button class="btn" onclick="exportCSV()">&#8595; CSV</button>
   </div>
 </div>
 <div class="sbar" id="sbar"></div>
 <div class="filters">
   <div class="sw"><span class="si">&#9906;</span><input type="text" id="search" placeholder="Search company, owner, notes..." oninput="render()"></div>
-  <select id="uf" onchange="render()"><option value="All">All use cases</option></select>
-  <select id="cf" onchange="render()"><option value="All">All countries</option></select>
-  <select id="of" onchange="render()"><option value="All">All owners</option></select>
-  <select id="prf" onchange="render()"><option value="All">All priorities</option></select>
-  <select id="sf" onchange="render()"><option value="All">All stages</option></select>
-  <select id="incf" onchange="render()"><option value="All">All incentives</option><option value="Yes">With incentive</option><option value="No">No incentive</option></select>
+  <div class="ms-wrap" id="wrap-stage"><button class="ms-btn" id="btn-stage" onclick="toggleDD('stage')">Stage <span class="ms-arrow">&#9660;</span></button><div class="ms-dropdown" id="dd-stage"></div></div>
+  <div class="ms-wrap" id="wrap-owner"><button class="ms-btn" id="btn-owner" onclick="toggleDD('owner')">Owner <span class="ms-arrow">&#9660;</span></button><div class="ms-dropdown" id="dd-owner"></div></div>
+  <div class="ms-wrap" id="wrap-country"><button class="ms-btn" id="btn-country" onclick="toggleDD('country')">Country <span class="ms-arrow">&#9660;</span></button><div class="ms-dropdown" id="dd-country"></div></div>
+  <div class="ms-wrap" id="wrap-priority"><button class="ms-btn" id="btn-priority" onclick="toggleDD('priority')">Priority <span class="ms-arrow">&#9660;</span></button><div class="ms-dropdown" id="dd-priority"></div></div>
+  <div class="ms-wrap" id="wrap-useCase"><button class="ms-btn" id="btn-useCase" onclick="toggleDD('useCase')">Use case <span class="ms-arrow">&#9660;</span></button><div class="ms-dropdown" id="dd-useCase"></div></div>
+  <div class="ms-wrap" id="wrap-incentive"><button class="ms-btn" id="btn-incentive" onclick="toggleDD('incentive')">Incentive <span class="ms-arrow">&#9660;</span></button><div class="ms-dropdown" id="dd-incentive"></div></div>
 </div>
 <div id="tw" class="tw"></div>
 <p class="tally" id="tally"></p>
@@ -190,60 +204,122 @@ const RAW=[
   {company:"Passline",deal:"Passline - México - [To add use case]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-09",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47670972344"},
   {company:"Mercado Libre, Inc.",deal:"Mercado Libre - México - [PoH and Age assurance]",useCase:"Age Verification",owner:"Bruno C.",stage:"1. Engaged",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-09",notes:"I asked a friend from Corp Dev in Mexico City to reengage in conversation.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47680821097"}
 ];
-let sk="lastEngagement",sd="desc",as="All";
-const active=RAW.filter(d=>d.stage&&!["10. Disqualified","9. Disengaged"].includes(d.stage)).length;
-document.getElementById("meta").textContent=RAW.length+" opportunities - "+active+" active - Synced "+LAST_SYNCED;
-function daysSince(s){if(!s)return null;return Math.floor((new Date()-new Date(s))/(1000*60*60*24));}
-function engColor(s){const d=daysSince(s);if(d===null)return"ns";if(d<=14)return"ok";if(d<=30)return"warn";return"stale";}
-function buildFilters(){
-  const ow=["All",...new Set(RAW.map(d=>d.owner).filter(Boolean))].sort();
-  const ct=["All",...new Set(RAW.map(d=>d.country).filter(Boolean))].sort();
-  const uc=["All",...new Set(RAW.map(d=>d.useCase).filter(Boolean))].sort();
-  const pr=["All","P0 (Critical)","P1 (High Prio)","P2 (Medium Prio)","P3 (Low Prio)"].filter(p=>p==="All"||RAW.some(d=>d.priority===p));
-  const st=["All",...SO.filter(s=>RAW.some(d=>d.stage===s))];
-  document.getElementById("of").innerHTML=ow.map(o=>`<option value="${o}">${o==="All"?"All owners":o}</option>`).join("");
-  document.getElementById("cf").innerHTML=ct.map(c=>`<option value="${c}">${c==="All"?"All countries":c}</option>`).join("");
-  document.getElementById("uf").innerHTML=uc.map(u=>`<option value="${u}">${u==="All"?"All use cases":u}</option>`).join("");
-  document.getElementById("prf").innerHTML=pr.map(p=>`<option value="${p}">${p==="All"?"All priorities":p}</option>`).join("");
-  document.getElementById("sf").innerHTML=st.map(s=>`<option value="${s}">${s==="All"?"All stages":s}</option>`).join("");
+
+// ── Multi-select filter state ─────────────────────────────────────────────────
+const SEL = {stage:new Set(), owner:new Set(), country:new Set(), priority:new Set(), useCase:new Set(), incentive:new Set()};
+
+function getOpts(key) {
+  if(key==="stage") return SO.filter(s=>RAW.some(d=>d.stage===s));
+  if(key==="priority") return ["P0 (Critical)","P1 (High Prio)","P2 (Medium Prio)","P3 (Low Prio)"].filter(p=>RAW.some(d=>d.priority===p));
+  if(key==="incentive") return ["Yes","No"].filter(v=>RAW.some(d=>d.incentive===v));
+  return [...new Set(RAW.map(d=>d[key]).filter(Boolean))].sort();
 }
+
+function buildDropdowns() {
+  const keys = ["stage","owner","country","priority","useCase","incentive"];
+  keys.forEach(key => {
+    const dd = document.getElementById("dd-"+key);
+    const opts = getOpts(key);
+    dd.innerHTML = `<div class="ms-all" onclick="selectAll('${key}')">Select all</div><div class="ms-all" onclick="clearSel('${key}')">Clear</div><div class="ms-divider"></div>` +
+      opts.map(o => `<label class="ms-item"><input type="checkbox" value="${o}" onchange="toggle('${key}','${o}')" id="cb-${key}-${encodeURIComponent(o)}">${o}</label>`).join("");
+  });
+}
+
+function toggle(key, val) {
+  if(SEL[key].has(val)) SEL[key].delete(val); else SEL[key].add(val);
+  updateBtn(key); render();
+}
+function selectAll(key) {
+  getOpts(key).forEach(o => { SEL[key].add(o); const cb=document.getElementById("cb-"+key+"-"+encodeURIComponent(o)); if(cb)cb.checked=true; });
+  updateBtn(key); render();
+}
+function clearSel(key) {
+  SEL[key].clear();
+  getOpts(key).forEach(o => { const cb=document.getElementById("cb-"+key+"-"+encodeURIComponent(o)); if(cb)cb.checked=false; });
+  updateBtn(key); render();
+}
+function updateBtn(key) {
+  const btn = document.getElementById("btn-"+key);
+  const labels = {stage:"Stage",owner:"Owner",country:"Country",priority:"Priority",useCase:"Use case",incentive:"Incentive"};
+  if(SEL[key].size===0) {
+    btn.textContent = labels[key]+" "; btn.innerHTML += '<span class="ms-arrow">&#9660;</span>';
+    btn.classList.remove("active");
+  } else {
+    btn.textContent = labels[key]+" ("+SEL[key].size+") ";
+    btn.innerHTML += '<span class="ms-arrow">&#9660;</span>';
+    btn.classList.add("active");
+  }
+  // Show/hide clear filters button
+  const anyActive = Object.values(SEL).some(s=>s.size>0) || document.getElementById("search").value;
+  document.getElementById("clearBtn").style.display = anyActive ? "inline-flex" : "none";
+}
+
+function toggleDD(key) {
+  const dd = document.getElementById("dd-"+key);
+  const isOpen = dd.classList.contains("open");
+  // Close all
+  document.querySelectorAll(".ms-dropdown").forEach(d=>d.classList.remove("open"));
+  if(!isOpen) dd.classList.add("open");
+}
+// Close dropdowns when clicking outside
+document.addEventListener("click", e => {
+  if(!e.target.closest(".ms-wrap")) document.querySelectorAll(".ms-dropdown").forEach(d=>d.classList.remove("open"));
+});
+
+function clearFilters() {
+  Object.keys(SEL).forEach(k=>clearSel(k));
+  document.getElementById("search").value="";
+  document.getElementById("clearBtn").style.display="none";
+  render();
+}
+
+// ── Stage bar ─────────────────────────────────────────────────────────────────
+let sk="lastEngagement",sd="desc";
+
 function buildSbar(){
   const cnt={};RAW.forEach(d=>{if(d.stage)cnt[d.stage]=(cnt[d.stage]||0)+1;});
   document.getElementById("sbar").innerHTML=SO.filter(s=>cnt[s]).map(s=>{
     const c=SC[s]||{bg:"#1a1a1a",t:"#9ca3af",d:"#4b5563"};
-    return`<button class="sc${as===s?" on":""}" data-s="${s}" onclick="ts('${s}')" style="color:${c.t};${as===s?`background:${c.bg};border-color:${c.t};`:""}">${s}<span class="cc" style="background:${c.d}">${cnt[s]}</span></button>`;
+    const on = SEL.stage.has(s);
+    return`<button class="sc${on?" on":""}" onclick="stageClick('${s}')" style="color:${c.t};${on?`background:${c.bg};border-color:${c.t};`:""}">${s}<span class="cc" style="background:${c.d}">${cnt[s]}</span></button>`;
   }).join("");
 }
-function ts(s){as=as===s?"All":s;document.getElementById("sf").value=as;buildSbar();render();}
+
+function stageClick(s) {
+  const cb = document.getElementById("cb-stage-"+encodeURIComponent(s));
+  if(SEL.stage.has(s)) { SEL.stage.delete(s); if(cb)cb.checked=false; }
+  else { SEL.stage.add(s); if(cb)cb.checked=true; }
+  updateBtn("stage"); buildSbar(); render();
+}
+
+// ── Filter + sort ─────────────────────────────────────────────────────────────
 function gf(){
   const q=document.getElementById("search").value.toLowerCase();
-  const u=document.getElementById("uf").value,c=document.getElementById("cf").value;
-  const o=document.getElementById("of").value,pr=document.getElementById("prf").value;
-  const s=document.getElementById("sf").value,inc=document.getElementById("incf").value;
   return RAW
-    .filter(d=>u==="All"||d.useCase===u)
-    .filter(d=>c==="All"||d.country===c)
-    .filter(d=>o==="All"||d.owner===o)
-    .filter(d=>pr==="All"||d.priority===pr)
-    .filter(d=>(s==="All"||d.stage===s)&&(as==="All"||d.stage===as))
-    .filter(d=>inc==="All"||d.incentive===inc)
+    .filter(d=>SEL.stage.size===0||SEL.stage.has(d.stage))
+    .filter(d=>SEL.owner.size===0||SEL.owner.has(d.owner))
+    .filter(d=>SEL.country.size===0||SEL.country.has(d.country))
+    .filter(d=>SEL.priority.size===0||SEL.priority.has(d.priority))
+    .filter(d=>SEL.useCase.size===0||SEL.useCase.has(d.useCase))
+    .filter(d=>SEL.incentive.size===0||SEL.incentive.has(d.incentive))
     .filter(d=>!q||[d.company,d.deal,d.useCase,d.owner,d.notes,d.incentiveDesc,d.country].join(" ").toLowerCase().includes(q))
     .sort((a,b)=>{let av=sk==="stage"?SO.indexOf(a.stage||""):(a[sk]||""),bv=sk==="stage"?SO.indexOf(b.stage||""):(b[sk]||"");return av<bv?(sd==="asc"?-1:1):av>bv?(sd==="asc"?1:-1):0;});
 }
+
 function sb(k){if(sk===k)sd=sd==="asc"?"desc":"asc";else{sk=k;sd="asc";}render();}
 function ar(k){if(sk!==k)return" <span style=\"opacity:.2;font-size:9px\">&#8645;</span>";return sd==="asc"?" <span style=\"font-size:9px;color:var(--accent)\">&#8593;</span>":" <span style=\"font-size:9px;color:var(--accent)\">&#8595;</span>";}
-function openNote(idx){
-  const d=window._noteData[idx];
-  document.getElementById("modalTitle").textContent=d.company;
-  document.getElementById("modalBody").textContent=d.notes;
-  document.getElementById("noteModal").classList.add("open");
-}
+
+function daysSince(s){if(!s)return null;return Math.floor((new Date()-new Date(s))/(1000*60*60*24));}
+function engColor(s){const d=daysSince(s);if(d===null)return"ns";if(d<=14)return"ok";if(d<=30)return"warn";return"stale";}
+
+function openNote(idx){const d=window._nd[idx];document.getElementById("modalTitle").textContent=d.company;document.getElementById("modalBody").textContent=d.notes;document.getElementById("noteModal").classList.add("open");}
 function closeModal(e){if(e.target.id==="noteModal")document.getElementById("noteModal").classList.remove("open");}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("noteModal").classList.remove("open");});
+
 function render(){
-  const data=gf();
-  window._noteData=data;
+  const data=gf(); window._nd=data;
   const wrap=document.getElementById("tw");
+  buildSbar();
   if(!data.length){wrap.innerHTML=`<div class="empty">No opportunities match your filters.</div>`;document.getElementById("tally").textContent="";return;}
   const cols=[{k:"company",l:"Company",w:"11%"},{k:"useCase",l:"Use case",w:"10%"},{k:"owner",l:"Owner",w:"8%"},{k:"stage",l:"Stage",w:"11%"},{k:"priority",l:"Priority",w:"8%"},{k:"lastEngagement",l:"Last engagement",w:"9%"},{k:"country",l:"Country",w:"7%"},{k:"incentive",l:"Incentive",w:"14%"},{k:"notes",l:"Notes",w:"22%"}];
   const thead=`<thead><tr>${cols.map(c=>`<th onclick="sb('${c.k}')" style="width:${c.w}">${c.l}${ar(c.k)}</th>`).join("")}</tr></thead>`;
@@ -263,7 +339,7 @@ function render(){
   wrap.innerHTML=`<table><colgroup>${cols.map(c=>`<col style="width:${c.w}">`).join("")}</colgroup>${thead}<tbody>${tbody}</tbody></table>`;
   document.getElementById("tally").textContent=`Showing ${data.length} of ${RAW.length} opportunities`;
 }
-function qqq(s){return s.replace(/"/g,"&quot;");}
+
 function exportCSV(){
   const data=gf();
   const h=["Company","Opportunity","Use Case","Owner","Stage","Priority","Last Engagement","Country","Region","Incentive","Incentive Description","Notes","HubSpot Link"];
@@ -273,7 +349,12 @@ function exportCSV(){
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   const a=document.createElement("a");a.href=url;a.download="latam_bd_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(url);
 }
-buildFilters();buildSbar();render();
+
+const active=RAW.filter(d=>d.stage&&!["10. Disqualified","9. Disengaged"].includes(d.stage)).length;
+document.getElementById("meta").textContent=RAW.length+" opportunities - "+active+" active - Synced "+LAST_SYNCED;
+buildDropdowns();
+buildSbar();
+render();
 </script>
 </body>
 </html>

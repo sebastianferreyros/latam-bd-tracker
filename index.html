@@ -56,7 +56,6 @@ tr:last-child td{border-bottom:none}
 .empty{text-align:center;padding:5rem 0;color:var(--muted);font-size:14px}
 .tally{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right;padding:6px 28px 0}
 .ns{color:var(--muted);font-size:11px;font-style:italic}
-
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
@@ -94,12 +93,18 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="tw" class="tw"></div>
 <p class="tally" id="tally"></p>
+<div class="modal-overlay" id="noteModal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('noteModal').classList.remove('open')">&#10005;</button>
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+  </div>
+</div>
 <script>
 const LAST_SYNCED="27 May 2026";
 const SO=["0. Targeted","1. Engaged","2. Qualified","3. Scoping","4. Proposal","5. Compliance","6. Contracting","7. Integrating","8. Live","9. Disengaged","10. Disqualified"];
 const SC={"0. Targeted":{bg:"var(--s0bg)",t:"var(--s0t)",d:"var(--s0d)"},"1. Engaged":{bg:"var(--s1bg)",t:"var(--s1t)",d:"var(--s1d)"},"2. Qualified":{bg:"var(--s2bg)",t:"var(--s2t)",d:"var(--s2d)"},"3. Scoping":{bg:"var(--s3bg)",t:"var(--s3t)",d:"var(--s3d)"},"4. Proposal":{bg:"var(--s4bg)",t:"var(--s4t)",d:"var(--s4d)"},"5. Compliance":{bg:"var(--s5bg)",t:"var(--s5t)",d:"var(--s5d)"},"6. Contracting":{bg:"var(--s6bg)",t:"var(--s6t)",d:"var(--s6d)"},"7. Integrating":{bg:"var(--s7bg)",t:"var(--s7t)",d:"var(--s7d)"},"8. Live":{bg:"var(--s8bg)",t:"var(--s8t)",d:"var(--s8d)"},"9. Disengaged":{bg:"var(--s9bg)",t:"var(--s9t)",d:"var(--s9d)"},"10. Disqualified":{bg:"var(--s10bg)",t:"var(--s10t)",d:"var(--s10d)"}};
 const PC={"P0 (Critical)":{bg:"rgba(239,68,68,.15)",t:"#f87171"},"P1 (High Prio)":{bg:"rgba(251,146,60,.15)",t:"#fb923c"},"P2 (Medium Prio)":{bg:"rgba(250,204,21,.1)",t:"#facc15"},"P3 (Low Prio)":{bg:"rgba(100,116,139,.15)",t:"#94a3b8"}};
-
 const RAW=[
   {company:"Intuitivo",deal:"Intuitivo - USA - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"United States",region:"LATAM",lastEngagement:"2026-05-21",notes:"",incentive:"Yes",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55942690185"},
   {company:"Arkimedes",deal:"Arkimedes - USA - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"1. Engaged",priority:"P3 (Low Prio)",country:"United States",region:"LATAM",lastEngagement:"2026-05-21",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55848587421"},
@@ -186,215 +191,12 @@ const RAW=[
   {company:"Belvo",deal:"Belvo - Mexico - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-16",notes:"In person meeting scheduled for February 26 with Federica Gregorini, GM, en Mexico.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48108045134"},
   {company:"Passline",deal:"Passline - México - [To add use case]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-09",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47670972344"},
   {company:"Mercado Libre, Inc.",deal:"Mercado Libre - México - [PoH and Age assurance]",useCase:"Age Verification",owner:"Bruno C.",stage:"1. Engaged",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-09",notes:"I asked a friend from Corp Dev in Mexico City to reengage in conversation.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47680821097"}
-]DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LatAm BD Pipeline - World ID</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8e9eb;--muted:#6b7280;--accent:#4ade80;--s0bg:#2a2d35;--s0t:#9ca3af;--s0d:#4b5563;--s1bg:#0f2a1e;--s1t:#4ade80;--s1d:#22c55e;--s2bg:#0e2433;--s2t:#60a5fa;--s2d:#3b82f6;--s3bg:#2a1f0a;--s3t:#fbbf24;--s3d:#f59e0b;--s4bg:#1e1535;--s4t:#a78bfa;--s4d:#8b5cf6;--s5bg:#2a0f1e;--s5t:#f472b6;--s5d:#ec4899;--s6bg:#1f0f2a;--s6t:#c084fc;--s6d:#a855f7;--s7bg:#0a2218;--s7t:#34d399;--s7d:#10b981;--s8bg:#082215;--s8t:#4ade80;--s8d:#16a34a;--s9bg:#1a1a1a;--s9t:#9ca3af;--s9d:#6b7280;--s10bg:#2a0808;--s10t:#f87171;--s10d:#ef4444;}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
-.header{padding:18px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
-.logo{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:15px;margin-right:12px;flex-shrink:0}
-.tg p{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
-.tg h1{font-size:17px;font-weight:500}
-.hl{display:flex;align-items:center}
-.hr{display:flex;gap:8px;align-items:center}
-.meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-right:4px}
-.btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 13px;border-radius:8px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text);transition:all .15s}
-.btn:hover{background:var(--surface);border-color:rgba(255,255,255,.2)}
-.sbar{display:flex;flex-wrap:wrap;gap:4px;padding:10px 28px;border-bottom:1px solid var(--border);background:var(--surface)}
-.sc{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid transparent;color:var(--muted);background:transparent;transition:all .15s;font-family:'DM Sans',sans-serif}
-.sc:hover{color:var(--text);border-color:var(--border2)}
-.sc.on{border-color:currentColor}
-.cc{min-width:16px;height:16px;border-radius:99px;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;color:#000}
-.filters{display:flex;gap:8px;padding:12px 28px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.sw{position:relative;flex:1 1 200px}
-.si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
-input,select{font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .15s}
-input{padding-left:30px;width:100%}
-input:focus,select:focus{border-color:var(--border2)}
-select{cursor:pointer}
-select option{background:var(--surface2)}
-.tw{overflow-x:auto;padding:0 28px 28px}
-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-width:1300px}
-thead tr{border-bottom:1px solid var(--border2)}
-th{padding:10px 12px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap;cursor:pointer;user-select:none;font-family:'DM Mono',monospace}
-th:hover{color:var(--text)}
-td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
-tr:hover td{background:rgba(255,255,255,.02)}
-tr:last-child td{border-bottom:none}
-.cp{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cm{color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cd{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'DM Mono',monospace;font-size:11px}
-.cn{color:#9ca3af;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:500;padding:3px 8px;border-radius:6px;white-space:nowrap}
-.bd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.pri{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;white-space:nowrap;font-family:'DM Mono',monospace}
-.inc-yes{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;color:#4ade80}
-.inc-no{font-size:10px;color:var(--muted)}
-.lnk{color:#3b82f6;text-decoration:none;font-size:11px;margin-right:5px;opacity:.7}
-.lnk:hover{opacity:1}
-.stale{color:#f87171}
-.ok{color:#4ade80}
-.warn{color:#fbbf24}
-.empty{text-align:center;padding:5rem 0;color:var(--muted);font-size:14px}
-.tally{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:right;padding:6px 28px 0}
-.ns{color:var(--muted);font-size:11px;font-style:italic}
-
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
-.modal h3{font-size:14px;font-weight:500;margin-bottom:12px;color:var(--text)}
-.modal p{font-size:13px;color:#9ca3af;line-height:1.7;white-space:pre-wrap}
-.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px}
-.modal-close:hover{color:var(--text);background:var(--surface2)}
-.note-btn{cursor:pointer;color:#9ca3af;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;background:none;border:none;padding:0;text-align:left;width:100%;font-family:inherit}
-.note-btn:hover{color:var(--text)}
-</style>
-</head>
-<body>
-<div class="header">
-  <div class="hl">
-    <div class="logo">W</div>
-    <div class="tg">
-      <p>LatAm &middot; BD pipeline &middot; World ID Integrations</p>
-      <h1>Partner tracker</h1>
-    </div>
-  </div>
-  <div class="hr">
-    <span class="meta" id="meta"></span>
-    <button class="btn" onclick="exportCSV()">&#8595; CSV</button>
-  </div>
-</div>
-<div class="sbar" id="sbar"></div>
-<div class="filters">
-  <div class="sw"><span class="si">&#9906;</span><input type="text" id="search" placeholder="Search company, owner, notes..." oninput="render()"></div>
-  <select id="uf" onchange="render()"><option value="All">All use cases</option></select>
-  <select id="cf" onchange="render()"><option value="All">All countries</option></select>
-  <select id="of" onchange="render()"><option value="All">All owners</option></select>
-  <select id="prf" onchange="render()"><option value="All">All priorities</option></select>
-  <select id="sf" onchange="render()"><option value="All">All stages</option></select>
-  <select id="incf" onchange="render()"><option value="All">All incentives</option><option value="Yes">With incentive</option><option value="No">No incentive</option></select>
-</div>
-<div id="tw" class="tw"></div>
-<p class="tally" id="tally"></p>
-<script>
-const LAST_SYNCED="27 May 2026";
-const SO=["0. Targeted","1. Engaged","2. Qualified","3. Scoping","4. Proposal","5. Compliance","6. Contracting","7. Integrating","8. Live","9. Disengaged","10. Disqualified"];
-const SC={"0. Targeted":{bg:"var(--s0bg)",t:"var(--s0t)",d:"var(--s0d)"},"1. Engaged":{bg:"var(--s1bg)",t:"var(--s1t)",d:"var(--s1d)"},"2. Qualified":{bg:"var(--s2bg)",t:"var(--s2t)",d:"var(--s2d)"},"3. Scoping":{bg:"var(--s3bg)",t:"var(--s3t)",d:"var(--s3d)"},"4. Proposal":{bg:"var(--s4bg)",t:"var(--s4t)",d:"var(--s4d)"},"5. Compliance":{bg:"var(--s5bg)",t:"var(--s5t)",d:"var(--s5d)"},"6. Contracting":{bg:"var(--s6bg)",t:"var(--s6t)",d:"var(--s6d)"},"7. Integrating":{bg:"var(--s7bg)",t:"var(--s7t)",d:"var(--s7d)"},"8. Live":{bg:"var(--s8bg)",t:"var(--s8t)",d:"var(--s8d)"},"9. Disengaged":{bg:"var(--s9bg)",t:"var(--s9t)",d:"var(--s9d)"},"10. Disqualified":{bg:"var(--s10bg)",t:"var(--s10t)",d:"var(--s10d)"}};
-const PC={"P0 (Critical)":{bg:"rgba(239,68,68,.15)",t:"#f87171"},"P1 (High Prio)":{bg:"rgba(251,146,60,.15)",t:"#fb923c"},"P2 (Medium Prio)":{bg:"rgba(250,204,21,.1)",t:"#facc15"},"P3 (Low Prio)":{bg:"rgba(100,116,139,.15)",t:"#94a3b8"}};
-
-const RAW=[
-  {company:"AA2000",deal:"AA2000 - Argentina - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-04",notes:"",incentive:"Yes",incentiveDesc:"Airport Free Pass, Airport Free Parking Day, Duty Free Credit",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53650604402"},
-  {company:"Arkimedes",deal:"Arkimedes - USA - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"1. Engaged",priority:"P3 (Low Prio)",country:"United States",region:"LATAM",lastEngagement:"2026-05-21",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55848587421"},
-  {company:"Banbajío",deal:"Banbajío - Mexico - [PoH + identity attestation + Life Proof]",useCase:"Life Proof",owner:"Bruno C.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48616709744"},
-  {company:"Banco Donde",deal:"Banco Donde - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55974839684"},
-  {company:"Banco Afirme",deal:"BancoAfirme - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-27",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48961810010"},
-  {company:"BBVA Mexico",deal:"BBVA - Mexico - PoH",useCase:"Proof of Human",owner:"Roberto F.",stage:"3. Scoping",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-18",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54795887205"},
-  {company:"Beepass",deal:"Beepas - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-12",notes:"Bepass - Biometria facil- Mas de 20k personas, por ley tiene q tener los estadio biométrias. 70.5% marketing share. Con Palmeira: Lo implementaron, para mitigar la Reventa de tickets. Flamengo: Para tema de violencia. Expansión: Argentina, y Colombia. Recitales y teatros. El club solo paga el acceso. Ahorro: Costo promedio de 100 usd por cada policia en un partido. Selfe: Tiene pruebas de vida, o liveness? Tener una base de hinchas. -Por lanzar con 4 a 5 clubes.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54795996161"},
-  {company:"Belvo",deal:"Belvo - Mexico - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-16",notes:"In person meeting scheduled for February 26 with Federica Gregorini, GM, en Mexico.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48108045134"},
-  {company:"Bepass",deal:"Bepass - Brazil - [PoH and Age Assurance]",useCase:"Age Verification",owner:"Sebastian F.",stage:"4. Proposal",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48660872567"},
-  {company:"Bombo",deal:"Bombo - Latam - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P1 (High Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55848459918"},
-  {company:"Bplay",deal:"Bplay - Latam - Age Verification",useCase:"Age Verification",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-08",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54467539295"},
-  {company:"Bradesco",deal:"Bradesco - Brazil - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"9. Disengaged",priority:"P3 (Low Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48660934417"},
-  {company:"BVNK",deal:"BVNK - LATAM - [PoH - Identity Attestations]",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-24",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48837229953"},
-  {company:"Caixa Economica Federal",deal:"Caixa - Brazil - [Life proof for social benefits]",useCase:"Life Proof",owner:"Sebastian F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48616709797"},
-  {company:"Conecta mx",deal:"Conecta - Mexico - PoH",useCase:"Proof of Human",owner:"Roberto F.",stage:"2. Qualified",priority:"P1 (High Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-18",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/49053646001"},
-  {company:"Connectly",deal:"Connectly - LATAM - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"3. Scoping",priority:"P2 (Medium Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48660934273"},
-  {company:"Crabi",deal:"Crabi - Mexico - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"0. Targeted",priority:"",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55852812659"},
-  {company:"Creditop",deal:"Creditop - Colombia - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"0. Targeted",priority:"",country:"Colombia",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55852875305"},
-  {company:"DF Entertainment",deal:"DF Entretainment - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-12",notes:"Meeting Summary – DF Entertainment | May 5, 2026. Attendees: Esteban Mirofsky (IT Manager / Director of Ticketing, DF), Martín Mazza, Matias Lonardi, Lorena Buzón (TFH). Key Takeaways: Original bot/duplicate pitch angle is NOT the opportunity — DF solved that internally. Real opportunity: KYC, fraud prevention & PoH. Esteban is building app (100K+ users) evolving into wallet platform — World ID as strong KYC/fraud layer. World ID Credentials preferred over Orb (less friction). Warm intro to DF product lead Matías. Potential intro to CEO of Visa Argentina. Next Steps: Send World deck to Esteban. Schedule intro with Matías. Follow up on Visa CEO intro.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54796115764"},
-  {company:"DF Entretainment",deal:"DF Entretainment - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-06",notes:"Meeting 5th of May. TFH: Matias Lonardi, Lorena Buzon, Martin Mazza. Platforms: queue-it.com, getcrowder.com. Tech for ticketing fraud: Visa Click to Pay.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53705994770"},
-  {company:"Didi",deal:"Didi - Mexico - POH",useCase:"Proof of Human",owner:"Roberto F.",stage:"1. Engaged",priority:"P1 (High Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-13",notes:"1st meeting scheduled for 2nd week of March. Interest about PoH for duplicated accounts.",incentive:"Yes",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48032957593"},
-  {company:"Disker",deal:"Disker - Latam - Unique Human (World ID)",useCase:"Proof of Human",owner:"Matias L.",stage:"4. Proposal",priority:"P1 (High Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-04-29",notes:"Meeting on 13th.",incentive:"Yes",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48254582431"},
-  {company:"Disney",deal:"Disney - Argentina - [To add use case]",useCase:"Proof of Human",owner:"Matias L.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-09",notes:"In touch with the Digital Marketing team. Share about Human Benefits as a platform to access World Users. Partners Mgr from Disney is OOO this week, will share the opportunity next week.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48280197424"},
-  {company:"Docusign",deal:"Docusign - LATAM - PoH",useCase:"Proof of Human",owner:"Sebastian F.",stage:"1. Engaged",priority:"P1 (High Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-03-16",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/50034024021"},
-  {company:"Draftea",deal:"Draftea - LATAM - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54784768821"},
-  {company:"Druo",deal:"Druo - LATAM - [PoH + Identity Attestation]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575656773"},
-  {company:"Elo",deal:"Elo - Brazil - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575718819"},
-  {company:"Fanatiz",deal:"Fanatiz Sports - Latam - Proof of Human",useCase:"Proof of Human",owner:"Roberto F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-19",notes:"@Roberto Fernández del Castillo aqui tambien agregar contacto para tener seguimiento de contacto/Correos.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54784816051"},
-  {company:"Felix",deal:"Felix - LATAM - [PoH + Identity attestation]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575656776"},
-  {company:"Fichap",deal:"Fichap - Argentina - [To add use case]",useCase:"Proof of Human",owner:"Martin M.",stage:"0. Targeted",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-02-09",notes:"NDAs sent, currently reviewing documentation to present proposal of how World ID fits in their flow.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47658340702"},
-  {company:"Finkargo",deal:"Finkargo - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"10. Disqualified",priority:"P3 (Low Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/49066379783"},
-  {company:"Finsus",deal:"Finsus - Mexico - ID",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48883940217"},
-  {company:"Fuego",deal:"Fuego - Latam - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55852751383"},
-  {company:"Grego AI",deal:"Grego AI - Latam - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"0. Targeted",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55852874905"},
-  {company:"Gupshup",deal:"Gupshup - Brazil - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48660872491"},
-  {company:"Gupy",deal:"Gupy - Brazil - [PoH + Identity attestation]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682655527"},
-  {company:"HolaSim",deal:"HolaSim - Argentina - ID Attestations",useCase:"Identity Attestation",owner:"Matias L.",stage:"6. Contracting",priority:"P1 (High Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-02-16",notes:"We need template Contract for partner and have Latam Benefits launch live.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48108654398"},
-  {company:"Idwall",deal:"Idwall - Brazil - [PoH + Age Assurance]",useCase:"Age Verification",owner:"Sebastian F.",stage:"3. Scoping",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575656777"},
-  {company:"Inswitch",deal:"Inswitch - LATAM - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48661181826"},
-  {company:"Intuitivo",deal:"Intuitivo - USA - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"United States",region:"LATAM",lastEngagement:"2026-05-21",notes:"",incentive:"Yes",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55942690185"},
-  {company:"IORQ",deal:"IORQ - Brazil - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"1. Engaged",priority:"P3 (Low Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"Yes",incentiveDesc:"Build Latam Start-up Perk Program",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55848335980"},
-  {company:"Iplan Rio",deal:"Iplan Rio - Brazil - PoH B2G",useCase:"Proof of Human",owner:"Sebastian F.",stage:"1. Engaged",priority:"P1 (High Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-03-04",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/49445005890"},
-  {company:"Jumio Corporation",deal:"Jumio - LATAM - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682655525"},
-  {company:"Magazine Luiza",deal:"Magazine Luiza - Brazil - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"Yes",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593602"},
-  {company:"Mercado Libre, Inc.",deal:"Mercado Libre - México - [PoH and Age assurance]",useCase:"Age Verification",owner:"Bruno C.",stage:"1. Engaged",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-09",notes:"I asked a friend from Corp Dev in Mexico City to reengage in conversation.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47680821097"},
-  {company:"Nonoc",deal:"Nonco - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-18",notes:"",incentive:"No",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54784763245"},
-  {company:"Nubank",deal:"Nubank - Mexico - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48616895540"},
-  {company:"OFFI",deal:"OFFI - Argentina - [To add use case]",useCase:"Proof of Human",owner:"Matias L.",stage:"6. Contracting",priority:"P2 (Medium Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-02-16",notes:"We need template Contract for partner and have Latam Benefits launch live.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48108654387"},
-  {company:"Passline",deal:"Passline - México - [To add use case]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-09",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/47670972344"},
-  {company:"Payface",deal:"Payface - Brazil - [PoH and Face PoH Payment]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"3. Scoping",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-23",notes:"",incentive:"Yes",incentiveDesc:"To be defined.",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575718816"},
-  {company:"PicPay",deal:"PicPay - Brazil - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"1. Engaged",priority:"P1 (High Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48616709893"},
-  {company:"Platzi",deal:"Platzi - LATAM - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-04-29",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53150134814"},
-  {company:"Pomelo",deal:"Pomelo - LATAM - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"0. Targeted",priority:"P1 (High Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-02-24",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48843420173"},
-  {company:"PREX",deal:"PREX - Argentina & Uruguay - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"1. Engaged",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-04",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53980293974"},
-  {company:"Pulppo",deal:"Pulppo - Mexico - PoH",useCase:"Proof of Human",owner:"Martin M.",stage:"0. Targeted",priority:"",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-21",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55852814376"},
-  {company:"Puntored",deal:"Puntored - Colombia - PoH",useCase:"Proof of Human",owner:"Sebastian F.",stage:"1. Engaged",priority:"P1 (High Prio)",country:"Colombia",region:"LATAM",lastEngagement:"2026-02-25",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48888344973"},
-  {company:"Reap",deal:"Reap - LATAM - [PoH + Identity Attestation]",useCase:"Proof of Human",owner:"Bruno C.",stage:"2. Qualified",priority:"P1 (High Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593611"},
-  {company:"Revolut",deal:"Revolut - LATAM - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48660934272"},
-  {company:"Rosen",deal:"Rosen - LATAM - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"0. Targeted",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-12",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54784816129"},
-  {company:"Clear Sales - Serasa Experian",deal:"Serasa - Brazil - [PoH + Age Assurance]",useCase:"Age Verification",owner:"Sebastian F.",stage:"4. Proposal",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575656766"},
-  {company:"Shinkansen",deal:"Shinkansen - Latam - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-19",notes:"Waiting to be introduced by VC who is an investor.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54784779273"},
-  {company:"Shorta",deal:"Shorta - Argentina - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-04-29",notes:"",incentive:"Yes",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53423504185"},
-  {company:"Signifyd",deal:"Signifyd - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P0 (Critical)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-25",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48884064042"},
-  {company:"Sinch",deal:"Sinch - LATAM - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"10. Disqualified",priority:"P3 (Low Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593677"},
-  {company:"Skala",deal:"Skala - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"10. Disqualified",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48888409935"},
-  {company:"Stripe",deal:"Stripe - US&Latam - AgentKit",useCase:"Age Verification",owner:"Matias L.",stage:"1. Engaged",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-21",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/55942008672"},
-  {company:"Sumsub",deal:"Sumsub - LATAM - [PoH + Identity attestations]",useCase:"Proof of Human",owner:"Bruno C.",stage:"2. Qualified",priority:"P1 (High Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"Con quien hablaron y por donde?",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48661181736"},
-  {company:"Tapi",deal:"Tapi - LATAM - [PoH]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"0. Targeted",priority:"P1 (High Prio)",country:"Argentina",region:"LATAM",lastEngagement:"2026-02-24",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48760772654"},
-  {company:"Thomas Greg and Sons",deal:"Thomas Greg and Sons - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"0. Targeted",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-11",notes:"LinkedIn contact: https://www.linkedin.com/in/juan-carlos-yañez-arenas-a484b649/",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54467603861"},
-  {company:"Ticket 360",deal:"Ticket 360 - Brazil - [PoH - ticketing platform]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593675"},
-  {company:"Nuvemshop",deal:"Tienda Nube - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"1. Engaged",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-15",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54796066420"},
-  {company:"TikTok",deal:"TikTok - BRAZIL - [Age assurance]",useCase:"Age Verification",owner:"Sebastian F.",stage:"9. Disengaged",priority:"P1 (High Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593679"},
-  {company:"Tilopay",deal:"TiloPay - LATAM - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575718757"},
-  {company:"Transak",deal:"Transak - LATAM - [PoH + One Account]",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48760833647"},
-  {company:"Ministerio de Seguridad",deal:"Tribuna Segura - Argentina - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"1. Engaged",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-07",notes:"Meeting Summary – Ministerio de Seguridad de la Nación | May 6, 2026. Franco Berlín (Director Nacional de Seguridad en Eventos Deportivos) met with Matias Lonardi, Martin Mazza, Lorena Buzón (TFH). Key: Critical flaw in Tribuna Segura is identity verification, not the list. World ID solves the DNI spoofing gap. Concrete path: World ID integration in Tribuna Segura app for real-time stadium access control. 17,500+ entries in national DB, direct access to Minister Bullrich. No government budget but clear tech need. Warm intro to Brazilian stadium access company launching at Vélez Sársfield. Next Steps: Develop Tribuna Segura + World ID proposal. Assess legal/privacy requirements. Explore broader gov-level World ID conversation.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53980305289"},
-  {company:"Uber Brazil",deal:"UBER - BRAZIL - [unique account per person]",useCase:"One Person One Account",owner:"Sebastian F.",stage:"2. Qualified",priority:"P1 (High Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-03-03",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593680"},
-  {company:"UBI Marshall Islands",deal:"UBI Marshall Islands - Marshall Islands - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"0. Targeted",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-12",notes:"Marshall Islands has launched a UBI distribution using a stablecoin company Dan invested. He has a unique government connection that would allow us to move the current infrastructure with World ID, potentially serving as the first real-world UBI use case for Worldcoin.",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54796116548"},
-  {company:"Utoppia",deal:"Utoppia - Latam - PoH",useCase:"Proof of Human",owner:"Roberto F.",stage:"5. Compliance",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-18",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54796009489"},
-  {company:"Valid",deal:"Valid - Brazil - [Age Assurance + PoH]",useCase:"Age Verification",owner:"Sebastian F.",stage:"2. Qualified",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-23",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48682593601"},
-  {company:"VTEX",deal:"VTEX - GLOBAL - PoH",useCase:"Proof of Human",owner:"Sebastian F.",stage:"7. Integrating",priority:"P0 (Critical)",country:"Brazil",region:"LATAM",lastEngagement:"2026-03-03",notes:"",incentive:"No",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48888345118"},
-  {company:"VU Security",deal:"VU Security - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Argentina",region:"LATAM",lastEngagement:"2026-05-04",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/53980234547"},
-  {company:"Walljobs",deal:"Walljobs - Brazil - [PoH for online interviews]",useCase:"Proof of Human",owner:"Sebastian F.",stage:"3. Scoping",priority:"P2 (Medium Prio)",country:"Brazil",region:"LATAM",lastEngagement:"2026-02-22",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575656840"},
-  {company:"Wati",deal:"Wati - Latam - [PoH]",useCase:"Proof of Human",owner:"Bruno C.",stage:"0. Targeted",priority:"P2 (Medium Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-20",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/48575718748"},
-  {company:"Workana",deal:"Workana - Mexico - PoH",useCase:"Proof of Human",owner:"Roberto F.",stage:"2. Qualified",priority:"P1 (High Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-05-19",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/49799739983"},
-  {company:"Zenpli",deal:"Zenpli - Mexico - PoH",useCase:"Proof of Human",owner:"Bruno C.",stage:"1. Engaged",priority:"P1 (High Prio)",country:"Mexico",region:"LATAM",lastEngagement:"2026-02-27",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/49011565469"},
-  {company:"Zircon.tech",deal:"Zircon.tech - Latam - Proof of Human",useCase:"Proof of Human",owner:"Matias L.",stage:"2. Qualified",priority:"",country:"Uruguay",region:"LATAM",lastEngagement:"2026-05-08",notes:"",incentive:"",incentiveDesc:"",link:"https://app.hubspot.com/contacts/22310328/record/2-56981221/54467468354"}
-]
-
+];
 let sk="lastEngagement",sd="desc",as="All";
 const active=RAW.filter(d=>d.stage&&!["10. Disqualified","9. Disengaged"].includes(d.stage)).length;
 document.getElementById("meta").textContent=RAW.length+" opportunities - "+active+" active - Synced "+LAST_SYNCED;
-
-function daysSince(dateStr){
-  if(!dateStr) return null;
-  const d=new Date(dateStr),now=new Date();
-  return Math.floor((now-d)/(1000*60*60*24));
-}
-
-function engagementColor(dateStr){
-  const days=daysSince(dateStr);
-  if(days===null) return "ns";
-  if(days<=14) return "ok";
-  if(days<=30) return "warn";
-  return "stale";
-}
-
+function daysSince(s){if(!s)return null;return Math.floor((new Date()-new Date(s))/(1000*60*60*24));}
+function engColor(s){const d=daysSince(s);if(d===null)return"ns";if(d<=14)return"ok";if(d<=30)return"warn";return"stale";}
 function buildFilters(){
   const ow=["All",...new Set(RAW.map(d=>d.owner).filter(Boolean))].sort();
   const ct=["All",...new Set(RAW.map(d=>d.country).filter(Boolean))].sort();
@@ -407,7 +209,6 @@ function buildFilters(){
   document.getElementById("prf").innerHTML=pr.map(p=>`<option value="${p}">${p==="All"?"All priorities":p}</option>`).join("");
   document.getElementById("sf").innerHTML=st.map(s=>`<option value="${s}">${s==="All"?"All stages":s}</option>`).join("");
 }
-
 function buildSbar(){
   const cnt={};RAW.forEach(d=>{if(d.stage)cnt[d.stage]=(cnt[d.stage]||0)+1;});
   document.getElementById("sbar").innerHTML=SO.filter(s=>cnt[s]).map(s=>{
@@ -415,9 +216,7 @@ function buildSbar(){
     return`<button class="sc${as===s?" on":""}" data-s="${s}" onclick="ts('${s}')" style="color:${c.t};${as===s?`background:${c.bg};border-color:${c.t};`:""}">${s}<span class="cc" style="background:${c.d}">${cnt[s]}</span></button>`;
   }).join("");
 }
-
 function ts(s){as=as===s?"All":s;document.getElementById("sf").value=as;buildSbar();render();}
-
 function gf(){
   const q=document.getElementById("search").value.toLowerCase();
   const u=document.getElementById("uf").value,c=document.getElementById("cf").value;
@@ -431,30 +230,17 @@ function gf(){
     .filter(d=>(s==="All"||d.stage===s)&&(as==="All"||d.stage===as))
     .filter(d=>inc==="All"||d.incentive===inc)
     .filter(d=>!q||[d.company,d.deal,d.useCase,d.owner,d.notes,d.incentiveDesc,d.country].join(" ").toLowerCase().includes(q))
-    .sort((a,b)=>{
-      let av=sk==="stage"?SO.indexOf(a.stage||""):(a[sk]||"");
-      let bv=sk==="stage"?SO.indexOf(b.stage||""):(b[sk]||"");
-      return av<bv?(sd==="asc"?-1:1):av>bv?(sd==="asc"?1:-1):0;
-    });
+    .sort((a,b)=>{let av=sk==="stage"?SO.indexOf(a.stage||""):(a[sk]||""),bv=sk==="stage"?SO.indexOf(b.stage||""):(b[sk]||"");return av<bv?(sd==="asc"?-1:1):av>bv?(sd==="asc"?1:-1):0;});
 }
-
 function sb(k){if(sk===k)sd=sd==="asc"?"desc":"asc";else{sk=k;sd="asc";}render();}
 function ar(c){if(sk!==c)return` <span style="opacity:.2;font-size:9px">&#8645;</span>`;return sd==="asc"?` <span style="font-size:9px;color:var(--accent)">&#8593;</span>`:` <span style="font-size:9px;color:var(--accent)">&#8595;</span>`;}
-
+function openNote(company,text){document.getElementById("modalTitle").textContent=company;document.getElementById("modalBody").textContent=text;document.getElementById("noteModal").classList.add("open");}
+function closeModal(e){if(e.target.id==="noteModal")document.getElementById("noteModal").classList.remove("open");}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("noteModal").classList.remove("open");});
 function render(){
   const data=gf(),wrap=document.getElementById("tw");
   if(!data.length){wrap.innerHTML=`<div class="empty">No opportunities match your filters.</div>`;document.getElementById("tally").textContent="";return;}
-  const cols=[
-    {k:"company",l:"Company",w:"11%"},
-    {k:"useCase",l:"Use case",w:"10%"},
-    {k:"owner",l:"Owner",w:"8%"},
-    {k:"stage",l:"Stage",w:"11%"},
-    {k:"priority",l:"Priority",w:"8%"},
-    {k:"lastEngagement",l:"Last engagement",w:"9%"},
-    {k:"country",l:"Country",w:"7%"},
-    {k:"incentive",l:"Incentive",w:"14%"},
-    {k:"notes",l:"Notes",w:"22%"},
-  ];
+  const cols=[{k:"company",l:"Company",w:"11%"},{k:"useCase",l:"Use case",w:"10%"},{k:"owner",l:"Owner",w:"8%"},{k:"stage",l:"Stage",w:"11%"},{k:"priority",l:"Priority",w:"8%"},{k:"lastEngagement",l:"Last engagement",w:"9%"},{k:"country",l:"Country",w:"7%"},{k:"incentive",l:"Incentive",w:"14%"},{k:"notes",l:"Notes",w:"22%"}];
   const thead=`<thead><tr>${cols.map(c=>`<th onclick="sb('${c.k}')" style="width:${c.w}">${c.l}${ar(c.k)}</th>`).join("")}</tr></thead>`;
   const tbody=data.map(d=>{
     const sc=SC[d.stage]||{bg:"#1a1a1a",t:"#9ca3af",d:"#4b5563"};
@@ -462,28 +248,17 @@ function render(){
     const badge=d.stage?`<span class="badge" style="background:${sc.bg};color:${sc.t}"><span class="bd" style="background:${sc.d}"></span>${d.stage}</span>`:`<span class="ns">-</span>`;
     const pLabel=d.priority.replace(" (Critical)","").replace(" (High Prio)","").replace(" (Medium Prio)","").replace(" (Low Prio)","");
     const prib=pc?`<span class="pri" style="background:${pc.bg};color:${pc.t}">${pLabel}</span>`:`<span class="ns">-</span>`;
-    const engColor=engagementColor(d.lastEngagement);
-    const engCell=d.lastEngagement?`<span class="${engColor}" style="font-family:'DM Mono',monospace;font-size:11px">${d.lastEngagement}</span>`:`<span class="ns">-</span>`;
-    const incCell=d.incentive==="Yes"
-      ?`<span class="inc-yes">&#10003; ${d.incentiveDesc||"Yes"}</span>`
-      :d.incentive==="No"?`<span class="inc-no">No</span>`:`<span class="ns">-</span>`;
+    const ec=engColor(d.lastEngagement);
+    const engCell=d.lastEngagement?`<span class="${ec}" style="font-family:'DM Mono',monospace;font-size:11px">${d.lastEngagement}</span>`:`<span class="ns">-</span>`;
+    const incCell=d.incentive==="Yes"?`<span class="inc-yes">&#10003; ${d.incentiveDesc||"Yes"}</span>`:d.incentive==="No"?`<span class="inc-no">No</span>`:`<span class="ns">-</span>`;
     const lnk=d.link?`<a class="lnk" href="${d.link}" target="_blank" rel="noreferrer">&#8599;</a>`:"";
-    return`<tr>
-      <td class="cp">${lnk}${d.company||"-"}</td>
-      <td class="cm" title="${d.useCase||""}">${d.useCase||"-"}</td>
-      <td class="cm">${d.owner||"-"}</td>
-      <td>${badge}</td>
-      <td>${prib}</td>
-      <td>${engCell}</td>
-      <td class="cm">${d.country||"-"}</td>
-      <td class="cn" title="${(d.incentiveDesc||"").replace(/"/g,"&quot;")}">${incCell}</td>
-      <td class="cn">${d.notes ? `<button class="note-btn" title="Click to expand" onclick="openNote('${d.company.replace(/'/g,"\\'")}','${d.notes.replace(/'/g,"\\'").replace(/\n/g," ")}')">${d.notes}</button>` : '-'}</td>
-    </tr>`;
+    const noteCell=d.notes?`<button class="note-btn" onclick="openNote('${d.company.replace(/'/g,"\'")}','${d.notes.replace(/'/g,"\'").replace(/
+/g," ")}')">${d.notes}</button>`:`<span class="ns">-</span>`;
+    return`<tr><td class="cp">${lnk}${d.company||"-"}</td><td class="cm" title="${d.useCase||""}">${d.useCase||"-"}</td><td class="cm">${d.owner||"-"}</td><td>${badge}</td><td>${prib}</td><td>${engCell}</td><td class="cm">${d.country||"-"}</td><td class="cn" title="${(d.incentiveDesc||"").replace(/"/g,"&quot;")}">${incCell}</td><td>${noteCell}</td></tr>`;
   }).join("");
   wrap.innerHTML=`<table><colgroup>${cols.map(c=>`<col style="width:${c.w}">`).join("")}</colgroup>${thead}<tbody>${tbody}</tbody></table>`;
   document.getElementById("tally").textContent=`Showing ${data.length} of ${RAW.length} opportunities`;
 }
-
 function exportCSV(){
   const data=gf();
   const h=["Company","Opportunity","Use Case","Owner","Stage","Priority","Last Engagement","Country","Region","Incentive","Incentive Description","Notes","HubSpot Link"];
@@ -492,26 +267,7 @@ function exportCSV(){
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   const a=document.createElement("a");a.href=url;a.download=`latam_bd_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
 }
-
 buildFilters();buildSbar();render();
-
-function openNote(company, text) {
-  document.getElementById('modalTitle').textContent = company;
-  document.getElementById('modalBody').textContent = text;
-  document.getElementById('noteModal').classList.add('open');
-}
-function closeModal(e) {
-  if(e.target.id === 'noteModal') document.getElementById('noteModal').classList.remove('open');
-}
-document.addEventListener('keydown', e => { if(e.key==='Escape') document.getElementById('noteModal').classList.remove('open'); });
 </script>
-
-<div class="modal-overlay" id="noteModal" onclick="closeModal(event)">
-  <div class="modal">
-    <button class="modal-close" onclick="document.getElementById('noteModal').classList.remove('open')">&#10005;</button>
-    <h3 id="modalTitle"></h3>
-    <p id="modalBody"></p>
-  </div>
-</div>
 </body>
 </html>
